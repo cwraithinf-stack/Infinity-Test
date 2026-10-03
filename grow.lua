@@ -1413,7 +1413,9 @@ end
                 continue
             end
             local water = character:GetAttribute('Water') or 0
-            if water <= 90 then character:SetAttribute('_drinkingToFull', true) end
+            if water < 100 then
+                character:SetAttribute('_drinkingToFull', true)
+            end
             if water >= 100 then
                 if not character:GetAttribute('_drinkingToFull') then continue end
                 character:SetAttribute('_drinkingToFull', false)
