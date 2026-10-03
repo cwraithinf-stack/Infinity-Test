@@ -2076,6 +2076,7 @@ end
         local doParkOnSlotOne
         doExistingSlotCycle = function()
             withLock(function()
+                shared._inSlotCycle = true
                 if shared._autoEatChecked then shared._autoEatChecked(false) end
                 if shared._autoDrinkChecked then shared._autoDrinkChecked(false) end
                 if shared._autoEatCarcassChecked then shared._autoEatCarcassChecked(false) end
@@ -2129,6 +2130,7 @@ end
                 teleportAndEnable(nil, slotName)
                 currentGrowthName = slotName
                 shared._currentGrowthName = slotName
+                shared._inSlotCycle = false
                 print("[GrowthLoop] [Existing] Now growing:", slotName)
             end)
         end
@@ -2169,16 +2171,16 @@ end
                     local parkedGrowth = parkedChar:GetAttribute("GrowthPercentage") or 0
                     if parkedGrowth >= 0.999 then
                         if shared._autoEatChecked        then shared._autoEatChecked(false)        end
-                        if shared._autoDrinkChecked      then shared._autoDrinkChecked(false)      end
                         if shared._autoEatCarcassChecked then shared._autoEatCarcassChecked(false) end
                         parkedChar:SetAttribute('_drinkingToFull', false)
                         local parkedRoot = parkedChar:FindFirstChild("HumanoidRootPart")
                         if parkedRoot then
-                            parkedRoot.Anchored                 = false
-                            parkedRoot.AssemblyLinearVelocity   = Vector3.zero
-                            parkedRoot.AssemblyAngularVelocity  = Vector3.zero
+                            parkedRoot.Anchored                = false
+                            parkedRoot.AssemblyLinearVelocity  = Vector3.zero
+                            parkedRoot.AssemblyAngularVelocity = Vector3.zero
                         end
-                        print("[GrowthLoop] [Park] Slot 1 is 100% — all feeding OFF, passive AFK active")
+                        if shared._autoDrinkChecked then shared._autoDrinkChecked(true) end
+                        print("[GrowthLoop] [Park] Slot 1 is 100% — eat OFF, drink ON, passive AFK active")
                     end
                 end
 
@@ -2189,6 +2191,7 @@ end
         if pendingParkMode then pendingParkMode = false task.spawn(function() doParkOnSlotOne() end) end
         local function doDeathRecovery()
             if not currentGrowthName then return end
+            if shared._inSlotCycle then return end
             withLock(function()
                 if parkingMode then
                     print("[GrowthLoop] Death in parking mode, recovering slot 1")
